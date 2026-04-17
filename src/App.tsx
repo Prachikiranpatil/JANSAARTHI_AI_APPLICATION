@@ -20,7 +20,8 @@ import {
   Menu,
   X,
   MessageCircle,
-  Smartphone
+  Smartphone,
+  ExternalLink
 } from 'lucide-react';
 import { CitizenProfile, AppView, ChatMessage, Scheme } from './types';
 import { NATIONAL_SCHEMES } from './lib/knowledgeGraph';
@@ -266,23 +267,35 @@ export default function App() {
 
           {/* Scheme List (Industrial Grid) */}
           <div className="flex flex-col min-h-0 bg-white border border-high-border">
-            <div className="grid grid-cols-[1fr_60px_60px] p-3 border-b border-high-border bg-high-bg text-[10px] font-bold text-high-secondary uppercase tracking-widest">
+            <div className="grid grid-cols-[1fr_80px_80px_80px] p-3 border-b border-high-border bg-high-bg text-[10px] font-bold text-high-secondary uppercase tracking-widest">
               <span>Scheme Name</span>
-              <span>Rank</span>
-              <span>Match</span>
+              <span className="text-center">Rank</span>
+              <span className="text-center">Match</span>
+              <span className="text-center">Action</span>
             </div>
             <div className="flex-1 overflow-y-auto high-scroll">
               {NATIONAL_SCHEMES.map((scheme, i) => (
-                <div key={scheme.id} className="data-row px-3 py-3 border-b border-high-bg items-center">
+                <div key={scheme.id} className="grid grid-cols-[1fr_80px_80px_80px] px-3 py-3 border-b border-high-bg items-center hover:bg-high-bg/30 transition-colors">
                   <div className="flex flex-col min-w-0">
                     <span className="font-bold text-high-primary truncate">{scheme.name}</span>
-                    <span className="text-[10px] text-high-secondary uppercase">{scheme.department}</span>
+                    <span className="text-[10px] text-high-secondary uppercase tracking-tighter">{scheme.department}</span>
                   </div>
                   <div className="font-mono text-center text-xs opacity-60">#{String(i + 1).padStart(2, '0')}</div>
                   <div className="flex justify-center">
                     <span className="match-tag px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
                       {98 - i * 5}.{Math.floor(Math.random() * 9)}%
                     </span>
+                  </div>
+                  <div className="flex justify-center">
+                    <a 
+                      href={scheme.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="p-1.5 hover:bg-high-accent hover:text-white rounded-sm transition-colors text-high-primary border border-high-border bg-white shadow-sm"
+                      title="Apply via Official Portal"
+                    >
+                      <ExternalLink size={14} />
+                    </a>
                   </div>
                 </div>
               ))}
