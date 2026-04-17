@@ -275,11 +275,16 @@ export default function App() {
             </div>
             <div className="flex-1 overflow-y-auto high-scroll">
               {NATIONAL_SCHEMES.map((scheme, i) => (
-                <div key={scheme.id} className="grid grid-cols-[1fr_80px_80px_80px] px-3 py-3 border-b border-high-bg items-center hover:bg-high-bg/30 transition-colors">
-                  <div className="flex flex-col min-w-0">
-                    <span className="font-bold text-high-primary truncate">{scheme.name}</span>
+                <div key={scheme.id} className="grid grid-cols-[1fr_80px_80px_80px] px-3 py-3 border-b border-high-bg items-center hover:bg-high-bg/30 transition-colors group">
+                  <a 
+                    href={scheme.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex flex-col min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <span className="font-bold text-high-primary truncate group-hover:text-high-accent transition-colors">{scheme.name}</span>
                     <span className="text-[10px] text-high-secondary uppercase tracking-tighter">{scheme.department}</span>
-                  </div>
+                  </a>
                   <div className="font-mono text-center text-xs opacity-60">#{String(i + 1).padStart(2, '0')}</div>
                   <div className="flex justify-center">
                     <span className="match-tag px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
