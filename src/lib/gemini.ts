@@ -1,8 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
-import { CitizenProfile, Scheme } from "../types";
+import { CitizenProfile } from "../types";
 import { NATIONAL_SCHEMES } from "./knowledgeGraph";
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 const SYSTEM_PROMPT = `
 You are JanSaarthi Assistant, the heart of JanSaarthi AI - India's Opportunity Intelligence Infrastructure.
@@ -22,7 +19,7 @@ USER PROFILE (known so far):
 
 OBJECTIVE:
 - Analyze the user's query.
-- If you find new profile info, list it in your "INTERNAL_PROFILE_UPDATE" structured JSON at the end of your response.
+- If you find new profile info, list it in your response.
 - Recommend schemes from the knowledge graph if the user fits.
 - If info is missing (e.g., age or income), ask gently.
 `;
@@ -32,53 +29,38 @@ export async function processJanSaarthiChat(
   history: { role: 'user' | 'assistant', content: string }[],
   profile: CitizenProfile
 ) {
-  const model = "gemini-3-flash-preview";
-  
-  const systemInstruction = SYSTEM_PROMPT.replace("{{PROFILE}}", JSON.stringify(profile));
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message,
+        history,
+        profile,
+        systemPrompt: SYSTEM_PROMPT
+      })
+    });
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: [
-      ...history.map(h => ({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: h.content }] })),
-      { role: 'user', parts: [{ text: message }] }
-    ],
-    config: {
-      systemInstruction,
-    }
-  });
-
-  return response.text;
+    if (!response.ok) throw new Error("Failed to communicate with Saarthi Engine.");
+    
+    const data = await response.json();
+    return data.text;
+  } catch (error) {
+    console.error("Chat Error:", error);
+    throw error;
+  }
 }
 
 export async function extractProfileInfo(message: string, currentProfile: CitizenProfile): Promise<Partial<CitizenProfile>> {
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: `Extract citizen profile information from this message: "${message}". 
-    Look for: age, gender, state, district, occupation, income, caste, disability, farmer status, BPL status.
-    Return ONLY JSON.`,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          age: { type: Type.NUMBER },
-          gender: { type: Type.STRING },
-          state: { type: Type.STRING },
-          district: { type: Type.STRING },
-          occupation: { type: Type.STRING },
-          annualIncome: { type: Type.NUMBER },
-          casteCategory: { type: Type.STRING },
-          disabilityStatus: { type: Type.BOOLEAN },
-          isFarmer: { type: Type.BOOLEAN },
-          hasBPLCard: { type: Type.BOOLEAN },
-        }
-      }
-    }
-  });
-
   try {
-    const data = JSON.parse(response.text);
-    return data;
+    const response = await fetch("/api/extract-profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+
+    if (!response.ok) return {};
+    return await response.json();
   } catch (e) {
     return {};
   }
