@@ -129,6 +129,7 @@ export default function App() {
     const currentInput = inputText;
     setInputText('');
     setIsTyping(true);
+    console.log("Saarthi: Processing message...", currentInput);
 
     extractProfileInfo(currentInput, profile).then(updates => {
       if (Object.keys(updates).length > 0) {
@@ -147,6 +148,13 @@ export default function App() {
       setChatHistory(prev => [...prev, aiMsg]);
     } catch (error) {
       console.error(error);
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'I encountered an error connecting to the Saarthi Engine. Please check your internet connection or try again later.',
+        timestamp: new Date().toLocaleTimeString()
+      };
+      setChatHistory(prev => [...prev, errorMsg]);
     } finally {
       setIsTyping(false);
     }

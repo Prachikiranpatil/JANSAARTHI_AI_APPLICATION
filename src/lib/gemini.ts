@@ -2,7 +2,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { CitizenProfile } from "../types";
 import { NATIONAL_SCHEMES } from "./knowledgeGraph";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Note: Vite replaces 'process.env.GEMINI_API_KEY' at build time.
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+if (!process.env.GEMINI_API_KEY) {
+  console.warn("GEMINI_API_KEY is not defined.");
+}
 
 const SYSTEM_PROMPT = `
 You are JanSaarthi Assistant, the heart of JanSaarthi AI - India's Opportunity Intelligence Infrastructure.
@@ -35,20 +39,18 @@ export async function processJanSaarthiChat(
   try {
     const systemInstruction = SYSTEM_PROMPT.replace("{{PROFILE}}", JSON.stringify(profile));
 
-    const response = await ai.models.generateContent({
+    const chat = ai.chats.create({
       model: "gemini-3-flash-preview",
-      contents: [
-        ...history.map(h => ({ 
-          role: h.role === 'user' ? 'user' : 'model', 
-          parts: [{ text: h.content }] 
-        })),
-        { role: 'user', parts: [{ text: message }] }
-      ],
       config: {
         systemInstruction,
-      }
+      },
+      history: history.map(h => ({ 
+        role: h.role === 'user' ? 'user' : 'model', 
+        parts: [{ text: h.content }] 
+      }))
     });
 
+    const response = await chat.sendMessage({ message });
     return response.text;
   } catch (error) {
     console.error("Chat Error:", error);
