@@ -66,7 +66,49 @@ export default function App() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [inputText, setInputText] = useState('');
+  const [isListening, setIsListening] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Initialize Speech Recognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-IN'; // Supporting Indian English context
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputText(prev => prev + (prev ? ' ' : '') + transcript);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current?.start();
+        setIsListening(true);
+      } catch (e) {
+        console.error('Failed to start speech recognition:', e);
+      }
+    }
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -369,13 +411,22 @@ export default function App() {
 
               <div className="p-4 border-t border-high-border bg-white">
                 <form onSubmit={handleSendMessage} className="flex gap-2">
-                   <input 
-                    type="text"
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder="Enter command or text..."
-                    className="flex-1 bg-high-bg border border-high-border rounded-sm px-3 py-2 text-xs outline-none focus:border-high-primary font-mono"
-                  />
+                   <div className="flex-1 relative flex items-center">
+                    <input 
+                      type="text"
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder={isListening ? "Listening..." : "Enter command or text..."}
+                      className={`w-full bg-high-bg border border-high-border rounded-sm px-3 py-2 text-xs outline-none focus:border-high-primary font-mono ${isListening ? 'border-high-accent animate-pulse' : ''}`}
+                    />
+                    <button 
+                      type="button"
+                      onClick={toggleListening}
+                      className={`absolute right-2 p-1 rounded-full transition-colors ${isListening ? 'text-high-accent' : 'text-high-secondary hover:text-high-primary'}`}
+                    >
+                      <Mic size={14} className={isListening ? 'animate-bounce' : ''} />
+                    </button>
+                  </div>
                   <button type="submit" className="bg-high-primary text-white p-2 rounded-sm shadow-sm hover:bg-high-accent transition-colors">
                     <Send size={16} />
                   </button>
