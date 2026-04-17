@@ -1,0 +1,6 @@
+{
+  "name": "JanSaarthi AI",
+  "description": "National Opportunity Intelligence Infrastructure for Bharat. A multilingual, voice-first AI system connecting citizens to government schemes, jobs, and healthcare opportunities.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["Multilingual AI", "Opportunity Reasoning", "Yojana ID", "Governance Intelligence"]
+}

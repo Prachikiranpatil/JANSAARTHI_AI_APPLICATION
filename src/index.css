@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+
+  --color-high-bg: #f4f5f7;
+  --color-high-ink: #1a1c21;
+  --color-high-accent: #e67e22;
+  --color-high-primary: #2c3e50;
+  --color-high-secondary: #7f8c8d;
+  --color-high-success: #27ae60;
+  --color-high-border: #d1d5db;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+}
+
+@layer base {
+  body {
+    @apply bg-high-bg text-high-ink antialiased overflow-hidden h-screen;
+    font-size: 14px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans tracking-tight font-bold text-high-primary;
+  }
+}
+
+.yojana-card {
+  @apply bg-white border border-high-border p-4 rounded-md shadow-sm transition-all hover:border-high-accent/50;
+}
+
+.yojana-id {
+  @apply font-mono text-base font-bold text-high-primary mb-1;
+}
+
+.section-label {
+  @apply text-[10px] font-bold text-high-secondary uppercase tracking-widest mb-2 block;
+}
+
+.btn-primary {
+  @apply bg-high-primary text-white px-4 py-2 rounded-md font-bold text-xs uppercase tracking-wider transition-all hover:bg-high-accent active:scale-95 flex items-center justify-center gap-2;
+}
+
+.chat-bubble-user {
+  @apply bg-high-primary text-white rounded-md p-3 max-w-[90%] font-medium shadow-sm;
+}
+
+.chat-bubble-ai {
+  @apply bg-white border border-high-border rounded-md p-3 max-w-[90%] shadow-sm text-high-ink;
+}
+
+.status-dot {
+  @apply w-2 h-2 rounded-full;
+}
+
+.data-row {
+  @apply grid grid-cols-[1fr_80px_80px] py-2 border-b border-high-bg hover:bg-high-bg transition-colors cursor-pointer text-sm;
+}
+
+.match-tag {
+  @apply px-2 py-0.5 rounded-full text-[10px] font-bold text-center;
+}
+
+.high-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.high-scroll::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.high-scroll::-webkit-scrollbar-thumb {
+  @apply bg-high-border rounded-full;
+}
