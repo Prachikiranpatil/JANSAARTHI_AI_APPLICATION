@@ -1,5 +1,8 @@
+import { GoogleGenAI, Type } from "@google/genai";
 import { CitizenProfile } from "../types";
 import { NATIONAL_SCHEMES } from "./knowledgeGraph";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const SYSTEM_PROMPT = `
 You are JanSaarthi Assistant, the heart of JanSaarthi AI - India's Opportunity Intelligence Infrastructure.
@@ -30,21 +33,23 @@ export async function processJanSaarthiChat(
   profile: CitizenProfile
 ) {
   try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message,
-        history,
-        profile,
-        systemPrompt: SYSTEM_PROMPT
-      })
+    const systemInstruction = SYSTEM_PROMPT.replace("{{PROFILE}}", JSON.stringify(profile));
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        ...history.map(h => ({ 
+          role: h.role === 'user' ? 'user' : 'model', 
+          parts: [{ text: h.content }] 
+        })),
+        { role: 'user', parts: [{ text: message }] }
+      ],
+      config: {
+        systemInstruction,
+      }
     });
 
-    if (!response.ok) throw new Error("Failed to communicate with Saarthi Engine.");
-    
-    const data = await response.json();
-    return data.text;
+    return response.text;
   } catch (error) {
     console.error("Chat Error:", error);
     throw error;
@@ -53,15 +58,47 @@ export async function processJanSaarthiChat(
 
 export async function extractProfileInfo(message: string, currentProfile: CitizenProfile): Promise<Partial<CitizenProfile>> {
   try {
-    const response = await fetch("/api/extract-profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message })
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: `Extract citizen profile information from this message: "${message}". 
+      Look for: age, gender, state, district, occupation (vocat.), income, caste, disability, farmer status, BPL status.
+      Return ONLY valid JSON that matches this schema:
+      {
+        "age": number,
+        "gender": string,
+        "state": string,
+        "district": string,
+        "occupation": string,
+        "annualIncome": number,
+        "casteCategory": string,
+        "disabilityStatus": boolean,
+        "isFarmer": boolean,
+        "hasBPLCard": boolean
+      }`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            age: { type: Type.NUMBER },
+            gender: { type: Type.STRING },
+            state: { type: Type.STRING },
+            district: { type: Type.STRING },
+            occupation: { type: Type.STRING },
+            annualIncome: { type: Type.NUMBER },
+            casteCategory: { type: Type.STRING },
+            disabilityStatus: { type: Type.BOOLEAN },
+            isFarmer: { type: Type.BOOLEAN },
+            hasBPLCard: { type: Type.BOOLEAN },
+          }
+        }
+      }
     });
 
-    if (!response.ok) return {};
-    return await response.json();
+    const data = JSON.parse(response.text || '{}');
+    return data;
   } catch (e) {
+    console.error("Extraction Error:", e);
     return {};
   }
 }
